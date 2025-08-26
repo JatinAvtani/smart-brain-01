@@ -13,6 +13,15 @@ export function Dashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const {contents, refresh} = useContent();
 
+  // Check authentication on component mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "/signin";
+      return;
+    }
+  }, []);
+
   useEffect(() => {
     refresh();
   }, [modalOpen])

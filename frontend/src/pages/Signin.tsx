@@ -12,15 +12,25 @@ export function Signin() {
 
     async function signin() {
         const username = usernameRef.current?.value;
-        console.log(usernameRef.current)
         const password = passwordRef.current?.value;
-        const response = await axios.post(BACKEND_URL + "/api/v1/signin", {
-            username,
-            password
-        })
-        const jwt = response.data.token;
-        localStorage.setItem("token", jwt);
-        navigate("/dashboard")
+        
+        if (!username || !password) {
+            alert("Please enter both username and password");
+            return;
+        }
+        
+        try {
+            const response = await axios.post(BACKEND_URL + "/api/v1/signin", {
+                username,
+                password
+            })
+            const jwt = response.data.token;
+            localStorage.setItem("token", jwt);
+            navigate("/dashboard")
+        } catch (error) {
+            console.error("Signin error:", error);
+            alert("Invalid credentials. Please try again.");
+        }
     }
     return <div className="h-screen w-screen bg-gray-200 flex justify-center items-center">
         <div className="bg-white rounded-xl border min-w-48 p-8">
