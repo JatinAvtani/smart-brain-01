@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import { random } from "./utils";
 import jwt from "jsonwebtoken";
 import { ContentModel, LinkModel, UserModel } from "./db";
@@ -9,10 +9,21 @@ import cors from "cors";
 const app = express();
 app.use(express.json());
 
+// CORS configuration
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? [
+      'https://smart-brain-01.vercel.app',
+      'https://smart-brain-frontend.vercel.app',
+      'https://smart-brain.vercel.app',
+      ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])
+    ]
+  : true; // Allow all origins in development
+
 app.use(cors({
-  origin: true, // Allow all origins for now - you can restrict this later
+  origin: allowedOrigins,
   methods: ['GET','POST','PUT','DELETE'],
-  credentials: true
+  credentials: true,
+  optionsSuccessStatus: 200 // For legacy browser support
 }));
 
 // Add logging middleware
@@ -21,13 +32,28 @@ app.use((req, res, next) => {
   next();
 });
 
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({ 
+    status: "OK", 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
-app.post("/api/v1/signup", async (req, res) => {
-    // TODO: zod validation , hash the password
-    const username = req.body.username;
-    const password = req.body.password;
 
+app.post("/api/v1/signup", (async (req: Request, res: Response) => {
     try {
+        // TODO: zod validation , hash the password
+        const username = req.body.username;
+        const password = req.body.password;
+
+        if (!username || !password) {
+            return res.status(400).json({
+                message: "Username and password are required"
+            });
+        }
+
         await UserModel.create({
             username: username,
             password: password
@@ -37,34 +63,49 @@ app.post("/api/v1/signup", async (req, res) => {
             message: "User signed up"
         })
     } catch(e) {
+        console.error("Signup error:", e);
         res.status(411).json({
             message: "User already exists"
         })
     }
-})
+}) as any)
 
-app.post("/api/v1/signin", async (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
+app.post("/api/v1/signin", (async (req: Request, res: Response) => {
+    try {
+        const username = req.body.username;
+        const password = req.body.password;
 
-    const existingUser = await UserModel.findOne({
-        username,
-        password
-    })
-    if (existingUser) {
-        const token = jwt.sign({
-            id: existingUser._id
-        }, JWT_PASSWORD)
+        if (!username || !password) {
+            return res.status(400).json({
+                message: "Username and password are required"
+            });
+        }
 
-        res.json({
-            token
-        })
-    } else {
-        res.status(403).json({
-            message: "Incorrrect credentials"
-        })
+        const existingUser = await UserModel.findOne({
+            username,
+            password
+        });
+
+        if (existingUser) {
+            const token = jwt.sign({
+                id: existingUser._id
+            }, JWT_PASSWORD);
+
+            res.json({
+                token
+            });
+        } else {
+            res.status(403).json({
+                message: "Incorrect credentials"
+            });
+        }
+    } catch (error) {
+        console.error("Signin error:", error);
+        res.status(500).json({
+            message: "Internal server error"
+        });
     }
-})
+}) as any)
 
 app.post("/api/v1/content", userMiddleware, async (req, res) => {
     const link = req.body.link;
@@ -177,4 +218,7 @@ app.get("/api/v1/brain/:shareLink", async (req, res) => {
 
 })
 
-app.listen(3000);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});

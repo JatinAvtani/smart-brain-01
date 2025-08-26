@@ -16,10 +16,13 @@ export function Dashboard() {
   // Check authentication on component mount
   useEffect(() => {
     const token = localStorage.getItem("token");
+    console.log("Dashboard mounted, token:", token ? "exists" : "missing");
     if (!token) {
+      console.log("No token found, redirecting to signin");
       window.location.href = "/signin";
       return;
     }
+    console.log("Token found, proceeding to dashboard");
   }, []);
 
   useEffect(() => {
