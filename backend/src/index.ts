@@ -10,7 +10,7 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({
-  origin: ['https://https://smart-brain-01-4nrp.vercel.app', 'http://localhost:3000'],
+  origin: ['https://smart-brain-01-4nrp.vercel.app', 'http://localhost:3000'],
   methods: ['GET','POST','PUT','DELETE']
 }));
 
