@@ -35,7 +35,7 @@ export function Dashboard() {
                     "Authorization": localStorage.getItem("token")
                 }
             });
-            const shareUrl = `http://localhost:5173/share/${response.data.hash}`;
+            const shareUrl = `${window.location.origin}/share/${response.data.hash}`;
             alert(shareUrl);
         }} variant="secondary" text="Share brain" startIcon={<ShareIcon />}></Button>
       </div>

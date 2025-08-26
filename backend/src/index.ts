@@ -10,9 +10,16 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({
-  origin: ['https://smart-brain-01-4nrp.vercel.app', 'http://localhost:3000'],
-  methods: ['GET','POST','PUT','DELETE']
+  origin: true, // Allow all origins for now - you can restrict this later
+  methods: ['GET','POST','PUT','DELETE'],
+  credentials: true
 }));
+
+// Add logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  next();
+});
 
 
 app.post("/api/v1/signup", async (req, res) => {
